@@ -7,34 +7,25 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="styles.css">
 </head>
-<body class="flex items-center justify-center bg-gray-900 w-[200px] h-[400px] rounded-2xl p-4 font-courier">
-    <div class="w-full flex flex-col items-center space-y-4">
-        <!-- Title -->
-        <h2 class="text-lg font-bold text-[#7d33ff]">EnPro - AI Prompt Enhancer</h2>
+<body class="bg-[#1e1e1e] text-white font-['Courier_New'] p-5 w-[1600px] h-[800px] rounded-2xl flex flex-col items-center justify-center gap-5 shadow-lg">
+    
+    <h1 class="text-3xl font-bold text-[#7d33ff]">EnPro - AI Prompt Enhancer</h1>
 
-        <!-- User Input -->
-        <textarea id="user-input" placeholder="Enter your prompt..."
-            class="w-full p-2 bg-gray-800 text-white rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-[#7d33ff]"
-        ></textarea>
-
-        <!-- Enhance Button -->
-        <button id="enhance-btn"
-            class="w-full bg-[#7d33ff] hover:bg-[#6c2fe6] text-white font-bold py-2 rounded-lg transition duration-300"
-        >Enhance Text</button>
-
-        <!-- Enhanced Output -->
-        <textarea id="enhanced-output" readonly placeholder="Enhanced output..."
-            class="w-full p-2 bg-gray-800 text-white rounded-lg border border-gray-700 focus:outline-none"
-        ></textarea>
-
-        <!-- Copy Button -->
-        <button id="copy-btn"
-            class="w-full bg-[#3380ff] hover:bg-[#2b6bcc] text-white font-bold py-2 rounded-lg transition duration-300"
-        >Copy Enhanced Text</button>
-
-        <!-- Copy Confirmation Message -->
-        <p id="copy-message" class="text-green-400 text-sm hidden">Text Copied!</p>
+    <div class="w-[90%] max-w-4xl bg-[#2a2a2a] p-5 rounded-2xl shadow-md">
+        <textarea id="user-input" placeholder="Enter your prompt..." class="w-full h-32 bg-gray-800 text-white p-3 rounded-lg border border-gray-600 focus:outline-none"></textarea>
     </div>
+
+    <button id="enhance-btn" class="bg-[#3380ff] hover:bg-[#2a6ecf] text-white font-bold py-3 px-6 rounded-lg shadow-md transition">Enhance Text</button>
+
+    <div class="w-[90%] max-w-4xl bg-[#2a2a2a] p-5 rounded-2xl shadow-md">
+        <textarea id="enhanced-output" readonly class="w-full h-32 bg-gray-800 text-white p-3 rounded-lg border border-gray-600 focus:outline-none"></textarea>
+    </div>
+
+    <button id="copy-btn" class="bg-[#7d33ff] hover:bg-[#5d24c8] text-white font-bold py-3 px-6 rounded-lg shadow-md transition">Copy Enhanced Text</button>
+
+    <p id="copy-message" class="hidden text-green-400 font-bold mt-2">Text Copied!</p>
+
+    <ul id="suggestions-list" class="w-[90%] max-w-4xl bg-[#2a2a2a] p-5 rounded-2xl shadow-md space-y-2 text-left"></ul>
 
     <script src="popup.js"></script>
 </body>
