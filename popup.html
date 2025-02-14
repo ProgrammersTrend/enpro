@@ -7,25 +7,33 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="styles.css">
 </head>
-<body class="flex items-center justify-center bg-gray-900 w-[400px] h-[250px] rounded-2xl p-4">
-    <div class="w-full flex flex-col items-center space-y-3">
-        <h2 class="text-lg font-semibold text-white">EnPro - AI Prompt Enhancer</h2>
+<body class="flex items-center justify-center bg-gray-900 w-[200px] h-[400px] rounded-2xl p-4 font-courier">
+    <div class="w-full flex flex-col items-center space-y-4">
+        <!-- Title -->
+        <h2 class="text-lg font-bold text-[#7d33ff]">EnPro - AI Prompt Enhancer</h2>
 
+        <!-- User Input -->
         <textarea id="user-input" placeholder="Enter your prompt..."
-            class="w-full p-2 bg-gray-800 text-white rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+            class="w-full p-2 bg-gray-800 text-white rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-[#7d33ff]"
         ></textarea>
 
+        <!-- Enhance Button -->
         <button id="enhance-btn"
-            class="w-full bg-green-500 hover:bg-green-600 text-white font-medium py-2 rounded-lg transition duration-300"
+            class="w-full bg-[#7d33ff] hover:bg-[#6c2fe6] text-white font-bold py-2 rounded-lg transition duration-300"
         >Enhance Text</button>
 
+        <!-- Enhanced Output -->
         <textarea id="enhanced-output" readonly placeholder="Enhanced output..."
             class="w-full p-2 bg-gray-800 text-white rounded-lg border border-gray-700 focus:outline-none"
         ></textarea>
 
+        <!-- Copy Button -->
         <button id="copy-btn"
-            class="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 rounded-lg transition duration-300"
+            class="w-full bg-[#3380ff] hover:bg-[#2b6bcc] text-white font-bold py-2 rounded-lg transition duration-300"
         >Copy Enhanced Text</button>
+
+        <!-- Copy Confirmation Message -->
+        <p id="copy-message" class="text-green-400 text-sm hidden">Text Copied!</p>
     </div>
 
     <script src="popup.js"></script>
