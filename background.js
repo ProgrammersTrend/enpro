@@ -1,3 +1,3 @@
 chrome.runtime.onInstalled.addListener(() => {
-    console.log("EnPro - AI Prompt Enhancer Installed!");
+    console.log("EnPro Extension Installed");
 });
