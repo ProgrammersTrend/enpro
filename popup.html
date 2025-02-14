@@ -1,31 +1,30 @@
 <!DOCTYPE html>
-<html lang="en" style="border-radius:10px">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EnPro - AI Prompt Enhancer</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="styles.css">
 </head>
-<body class="bg-[#1e1e1e] text-white font-['Courier_New'] p-5 w-[1600px] h-[800px] rounded-2xl flex flex-col items-center justify-center gap-5 shadow-lg">
-    
-    <h1 class="text-3xl font-bold text-[#7d33ff]">EnPro - AI Prompt Enhancer</h1>
+<body>
+    <div class="popup-container">
+        <h1 class="title">EnPro - AI Prompt Enhancer</h1>
 
-    <div class="w-[90%] max-w-4xl bg-[#2a2a2a] p-5 rounded-2xl shadow-md">
-        <textarea id="user-input" placeholder="Enter your prompt..." class="w-full h-32 bg-gray-800 text-white p-3 rounded-lg border border-gray-600 focus:outline-none"></textarea>
+        <div class="input-container">
+            <textarea id="user-input" placeholder="Enter your prompt..."></textarea>
+        </div>
+
+        <button id="enhance-btn">Enhance Text</button>
+
+        <div class="output-container">
+            <textarea id="enhanced-output" readonly></textarea>
+        </div>
+
+        <button id="copy-btn">Copy Enhanced Text</button>
+        <p id="copy-message" class="hidden">Text Copied!</p>
+
+        <ul id="suggestions-list"></ul>
     </div>
-
-    <button id="enhance-btn" class="bg-[#3380ff] hover:bg-[#2a6ecf] text-white font-bold py-3 px-6 rounded-lg shadow-md transition">Enhance Text</button>
-
-    <div class="w-[90%] max-w-4xl bg-[#2a2a2a] p-5 rounded-2xl shadow-md">
-        <textarea id="enhanced-output" readonly class="w-full h-32 bg-gray-800 text-white p-3 rounded-lg border border-gray-600 focus:outline-none"></textarea>
-    </div>
-
-    <button id="copy-btn" class="bg-[#7d33ff] hover:bg-[#5d24c8] text-white font-bold py-3 px-6 rounded-lg shadow-md transition">Copy Enhanced Text</button>
-
-    <p id="copy-message" class="hidden text-green-400 font-bold mt-2">Text Copied!</p>
-
-    <ul id="suggestions-list" class="w-[90%] max-w-4xl bg-[#2a2a2a] p-5 rounded-2xl shadow-md space-y-2 text-left"></ul>
 
     <script src="popup.js"></script>
 </body>
