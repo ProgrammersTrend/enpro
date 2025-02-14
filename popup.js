@@ -20,7 +20,7 @@ document.addEventListener("DOMContentLoaded", function () {
             navigator.clipboard.writeText(enhancedOutput.value).then(() => {
                 copyMsg.classList.remove("hidden");
 
-                // Clear existing timeout if user clicks multiple times
+                // Remove previous timeout before setting a new one
                 clearTimeout(copyMsg.dataset.timeout);
                 copyMsg.dataset.timeout = setTimeout(() => {
                     copyMsg.classList.add("hidden");
