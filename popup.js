@@ -2,29 +2,31 @@ document.addEventListener("DOMContentLoaded", function () {
     const userInput = document.getElementById("user-input");
     const enhanceBtn = document.getElementById("enhance-btn");
     const enhancedOutput = document.getElementById("enhanced-output");
+    const suggestionsList = document.getElementById("suggestions-list");
     const copyBtn = document.getElementById("copy-btn");
     const copyMessage = document.getElementById("copy-message");
 
-    let verbForms = {}; // Stores verb forms from CSV
+    let verbForms = {};  // Dictionary to store verb mappings
 
-    // Load CSV and store verb forms
-    fetch("./verbforms.csv")
-        .then(response => response.text())
-        .then(data => parseCSV(data))
-        .catch(error => console.error("Error loading CSV:", error));
-
-    function parseCSV(data) {
-        const rows = data.split("\n").map(row => row.split(","));
-        rows.forEach(row => {
-            if (row.length >= 5) {
-                let [V1, V2, V3, V4, V5] = row.map(v => v.trim().toLowerCase());
-                verbForms[V1] = { V1, V2, V3, V4, V5 };
-            }
-        });
+    // Load verb forms from CSV
+    async function loadVerbForms() {
+        try {
+            const response = await fetch("verbforms.csv");
+            const data = await response.text();
+            const lines = data.split("\n");
+            lines.forEach(line => {
+                const [V1, V2, V3, V4, V5] = line.split(",").map(v => v.trim());
+                if (V1) {
+                    verbForms[V1.toLowerCase()] = { V2, V3, V4, V5 };
+                }
+            });
+        } catch (error) {
+            console.error("Error loading verb forms:", error);
+        }
     }
 
-    // Event Listener for Enhance Button
-    enhanceBtn.addEventListener("click", () => {
+    enhanceBtn.addEventListener("click", async () => {
+        await loadVerbForms();  // Ensure verb list is loaded before processing
         const prompt = userInput.value.trim();
         if (prompt) {
             const correctedText = enhancePrompt(prompt);
@@ -32,7 +34,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    // Copy Enhanced Text
     copyBtn.addEventListener("click", () => {
         navigator.clipboard.writeText(enhancedOutput.value);
         showCopyMessage();
@@ -46,27 +47,45 @@ document.addEventListener("DOMContentLoaded", function () {
         }, 3000);
     }
 
-    function enhancePrompt(text) {
-        let sentences = text.split(/([.!?;])/g); // Splits while keeping punctuation
-        let correctedText = "";
+    function enhancePrompt(prompt) {
+        if (!prompt) return "";
 
-        sentences.forEach((sentence, index) => {
-            if (index % 2 === 0) {
-                let words = sentence.split(/\s+/);
-                words = words.map(word => correctVerb(word));
-                sentence = words.join(" ");
-            }
-            correctedText += sentence;
+        // Capitalize first letter of each sentence
+        let sentences = prompt.split(/(?<=[.!?])\s+/).map(sentence => {
+            return sentence.charAt(0).toUpperCase() + sentence.slice(1);
         });
 
-        return correctedText.charAt(0).toUpperCase() + correctedText.slice(1);
+        let correctedSentences = sentences.map(sentence => correctGrammar(sentence));
+
+        return correctedSentences.join(" ");
     }
 
-    function correctVerb(word) {
-        let lowerWord = word.toLowerCase();
-        if (verbForms[lowerWord]) {
-            return verbForms[lowerWord].V2; // Replaces with past tense (V2)
+    function correctGrammar(sentence) {
+        let words = sentence.split(" ");
+        let correctedWords = words.map((word, index) => {
+            let lowerWord = word.toLowerCase().replace(/[.,!?;]/g, '');  // Remove punctuation temporarily
+
+            if (verbForms[lowerWord]) {
+                // Choose correct verb form based on context (basic heuristic)
+                if (words[index - 1] && words[index - 1].toLowerCase() === "has") {
+                    return verbForms[lowerWord].V3;  // Past participle
+                } else if (words[index - 1] && words[index - 1].toLowerCase() === "will") {
+                    return verbForms[lowerWord].V1;  // Base form for future
+                } else if (index === 0 || words[index - 1].toLowerCase() === "he" || words[index - 1].toLowerCase() === "she") {
+                    return verbForms[lowerWord].V2;  // Singular present
+                } else {
+                    return verbForms[lowerWord].V1;  // Default to base form
+                }
+            }
+            return word;  // Return unchanged if not a verb
+        });
+
+        // Re-add punctuation where necessary
+        let correctedSentence = correctedWords.join(" ");
+        if (!/[.!?]$/.test(correctedSentence)) {
+            correctedSentence += ".";  // Add full stop if missing
         }
-        return word;
+
+        return correctedSentence;
     }
 });
