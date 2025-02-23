@@ -2,23 +2,20 @@ document.addEventListener("DOMContentLoaded", function () {
     const userInput = document.getElementById("user-input");
     const enhanceBtn = document.getElementById("enhance-btn");
     const enhancedOutput = document.getElementById("enhanced-output");
-    const suggestionsList = document.getElementById("suggestions-list");
     const copyBtn = document.getElementById("copy-btn");
     const copyMessage = document.getElementById("copy-message");
 
-    let verbForms = {};
+    let verbForms = {};  // Store verb conjugations dynamically
 
-    // Load verb forms from CSV file
+    // Load verb forms from CSV
     fetch("verbforms.csv")
         .then(response => response.text())
-        .then(csvText => {
-            const lines = csvText.split("\n");
+        .then(data => {
+            const lines = data.split("\n");
             lines.forEach(line => {
                 const [V1, V2, V3, V4, V5] = line.split(",");
                 if (V1) {
-                    verbForms[V1.trim().toLowerCase()] = {
-                        V1: V1.trim(), V2: V2.trim(), V3: V3.trim(), V4: V4.trim(), V5: V5.trim()
-                    };
+                    verbForms[V1.trim().toLowerCase()] = { V2, V3, V4, V5 };
                 }
             });
         });
@@ -47,43 +44,74 @@ document.addEventListener("DOMContentLoaded", function () {
     function enhancePrompt(prompt) {
         if (!prompt) return "";
 
-        let words = prompt.split(/\s+/);
-        let enhancedWords = [];
+        let sentences = prompt.split(/(?<=[.!?])\s+/); // Split sentences properly
+        let enhancedSentences = sentences.map(sentence => processSentence(sentence));
 
-        for (let i = 0; i < words.length; i++) {
-            let word = words[i].toLowerCase();
-            let nextWord = words[i + 1] ? words[i + 1].toLowerCase() : "";
+        return enhancedSentences.join(" ");
+    }
 
-            // Detect time-related words to determine the correct tense
-            let tense = "present";
-            if (word === "yesterday" || word === "last" || nextWord === "ago") tense = "past";
-            if (word === "tomorrow" || word === "next" || nextWord === "will") tense = "future";
-            if (word === "already" || word === "since" || word === "for") tense = "perfect";
+    function processSentence(sentence) {
+        let words = sentence.split(/\s+/);
+        let updatedWords = [];
+        let tense = detectTense(sentence); // Identify tense
 
-            // Check if the word is a verb and replace it accordingly
-            if (verbForms[word]) {
-                if (tense === "past") {
-                    enhancedWords.push(verbForms[word].V2);
-                } else if (tense === "future") {
-                    enhancedWords.push("will " + verbForms[word].V1);
-                } else if (tense === "perfect") {
-                    enhancedWords.push("has " + verbForms[word].V3);
-                } else {
-                    enhancedWords.push(verbForms[word].V1);
-                }
-            } else {
-                enhancedWords.push(words[i]);
+        words.forEach((word, index) => {
+            let lowerWord = word.toLowerCase();
+
+            // Fix contractions
+            if (lowerWord === "dont") words[index] = "don't";
+            if (lowerWord === "wanna") words[index] = "want to";
+            if (lowerWord === "gonna") words[index] = "going to";
+
+            // Apply tense correction to verbs
+            if (verbForms[lowerWord]) {
+                words[index] = applyTenseTransformation(lowerWord, tense);
             }
+
+            updatedWords.push(words[index]);
+        });
+
+        let correctedSentence = updatedWords.join(" ");
+        correctedSentence = correctedSentence.replace(/\si\s/g, " I "); // Capitalize 'I'
+        correctedSentence = correctedSentence.replace(/\bpls\b/gi, "please");
+
+        // Ensure proper punctuation
+        if (!/[.!?]$/.test(correctedSentence)) {
+            correctedSentence += ".";
         }
 
-        let correctedText = enhancedWords.join(" ");
+        return correctedSentence;
+    }
 
-        // Ensure correct punctuation
-        correctedText = correctedText.replace(/\si\s/g, " I "); // Capitalize "I"
-        correctedText = correctedText.replace(/(\w+)([.,!?])/g, "$1 $2"); // Fix punctuation spacing
-        correctedText = correctedText.replace(/\s+/g, " ").trim(); // Remove extra spaces
-        if (!/[.!?]$/.test(correctedText)) correctedText += "."; // Add final punctuation
+    function detectTense(sentence) {
+        let lowerSentence = sentence.toLowerCase();
 
-        return correctedText;
+        if (lowerSentence.includes("yesterday") || lowerSentence.includes("last") || lowerSentence.includes("ago")) {
+            return "past";
+        }
+        if (lowerSentence.includes("has") || lowerSentence.includes("have") || lowerSentence.includes("had")) {
+            return "perfect";
+        }
+        if (lowerSentence.includes("tomorrow") || lowerSentence.includes("next") || lowerSentence.includes("will")) {
+            return "future";
+        }
+        return "present"; // Default tense
+    }
+
+    function applyTenseTransformation(word, tense) {
+        let verb = verbForms[word];
+
+        if (!verb) return word; // No transformation needed if verb is not found
+
+        switch (tense) {
+            case "past":
+                return verb.V2 || word; // Simple past
+            case "perfect":
+                return verb.V3 || word; // Past participle
+            case "future":
+                return "will " + (verb.V1 || word); // Future tense
+            default:
+                return word; // Present tense (no change)
+        }
     }
 });
