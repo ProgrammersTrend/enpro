@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", function () {
     let verbForms = {}; // Stores verb forms from CSV
 
     // Load CSV and store verb forms
-    fetch("verbforms.csv")
+    fetch("./verbforms.csv")
         .then(response => response.text())
         .then(data => parseCSV(data))
         .catch(error => console.error("Error loading CSV:", error));
