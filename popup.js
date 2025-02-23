@@ -6,12 +6,29 @@ document.addEventListener("DOMContentLoaded", function () {
     const copyBtn = document.getElementById("copy-btn");
     const copyMessage = document.getElementById("copy-message");
 
+    let verbForms = {}; // Stores verb conjugations
+
+    // ✅ Load CSV File with 9000+ Verbs
+    fetch("./verbforms.csv")
+        .then(response => response.text())
+        .then(data => parseCSV(data))
+        .catch(error => console.error("Error loading CSV:", error));
+
+    function parseCSV(csvText) {
+        const rows = csvText.split("\n");
+        rows.forEach(row => {
+            const [V1, V2, V3, V4, V5] = row.split(",").map(word => word.trim());
+            if (V1 && V2 && V3) {
+                verbForms[V1.toLowerCase()] = { base: V1, past: V2, pastParticiple: V3, thirdPerson: V4 || V1 + "s", gerund: V5 || V1 + "ing" };
+            }
+        });
+    }
+
     enhanceBtn.addEventListener("click", () => {
         const prompt = userInput.value.trim();
         if (prompt) {
-            const { correctedText, suggestions } = enhancePrompt(prompt);
+            const correctedText = enhanceText(prompt);
             enhancedOutput.value = correctedText;
-            displaySuggestions(suggestions);
         }
     });
 
@@ -29,38 +46,49 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 });
 
-function enhancePrompt(prompt) {
-    if (!prompt) return { correctedText: "", suggestions: [] };
-
-    let correctedText = prompt.charAt(0).toUpperCase() + prompt.slice(1);
-    correctedText = correctedText.replace(/\bi\b/g, 'I');
-    correctedText = correctedText.replace(/\bpls\b/gi, 'please');
-    correctedText = correctedText.replace(/\bthx\b|\bty\b/gi, 'thank you');
-    correctedText = correctedText.replace(/\bai\b/gi, 'Artificial Intelligence');
-
-    if (!/[.!?]$/.test(correctedText)) {
-        correctedText += '.';
-    }
-
-    const suggestions = [
-        correctedText.replace("please", "kindly"),
-        correctedText.replace("thank you", "thanks"),
-        correctedText.replace("Artificial Intelligence", "AI"),
-        correctedText.replace("Enhance", "Improve"),
-    ];
-
-    return { correctedText, suggestions };
+// ✅ Enhances Multi-Paragraph Text
+function enhanceText(text) {
+    let paragraphs = text.split(/\n+/);
+    let enhancedParagraphs = paragraphs.map(paragraph => {
+        let sentences = splitIntoSentences(paragraph);
+        let enhancedSentences = sentences.map(sentence => enhanceSentence(sentence));
+        return enhancedSentences.join(" ");
+    });
+    return enhancedParagraphs.join("\n\n");
 }
 
-function displaySuggestions(suggestions) {
-    suggestionsList.innerHTML = "";
-    suggestions.forEach(suggestion => {
-        const li = document.createElement("li");
-        li.textContent = suggestion;
-        li.className = "suggestion";
-        li.addEventListener("click", () => {
-            document.getElementById("enhanced-output").value = suggestion;
-        });
-        suggestionsList.appendChild(li);
+// ✅ Splits Sentences While Keeping Punctuation
+function splitIntoSentences(text) {
+    return text.match(/[^.!?;]+[.!?;]?/g) || [text];
+}
+
+// ✅ Enhances a Single Sentence
+function enhanceSentence(sentence) {
+    let words = sentence.split(" ");
+    words[0] = words[0].charAt(0).toUpperCase() + words[0].slice(1); // Capitalize first word
+
+    let fixedSentence = words.join(" ");
+    fixedSentence = correctTense(fixedSentence);
+    fixedSentence = correctPunctuation(fixedSentence);
+
+    return fixedSentence;
+}
+
+// ✅ Corrects Verb Tenses Using CSV Data
+function correctTense(sentence) {
+    return sentence.replace(/\b([a-z]+)\b/gi, (match, verb) => {
+        let verbLower = verb.toLowerCase();
+        if (verbForms[verbLower]) {
+            return verbForms[verbLower].base; // Use base form to ensure tense accuracy
+        }
+        return match;
     });
+}
+
+// ✅ Ensures Correct Punctuation (., !, ;, -)
+function correctPunctuation(sentence) {
+    sentence = sentence.replace(/\s+([.,!;-])/g, "$1"); // Remove unnecessary spaces before punctuation
+    sentence = sentence.replace(/([.,!;-])([a-zA-Z])/g, "$1 $2"); // Ensure space after punctuation
+    if (!/[.!?;-]$/.test(sentence)) sentence += "."; // Ensure a proper sentence-ending punctuation
+    return sentence;
 }
