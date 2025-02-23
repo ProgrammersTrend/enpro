@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EnPro - AI Prompt Enhancer</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="popup-container">
+        <h1 class="title">EnPro - AI Prompt Enhancer</h1>
+
+        <div class="input-container">
+            <textarea class="inputarea" id="user-input" placeholder="Enter your prompt..."></textarea>
+        </div>
+
+        <button id="enhance-btn">Enhance Text</button>
+
+        <div class="output-container">
+            <textarea class="inputarea" id="enhanced-output" readonly></textarea>
+        </div>
+
+        <button id="copy-btn">Copy Enhanced Text</button>
+        <p id="copy-message" class="hidden">Text Copied!</p>
+
+        <ul id="suggestions-list"></ul>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>
