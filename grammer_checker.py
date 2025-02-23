@@ -1,26 +1,27 @@
-import sys
+import subprocess
 import json
-import language_tool_python
+import sys
+from flask import Flask, request, jsonify
+import language_tool_python  # Grammar correction library
 
-# Initialize LanguageTool for English grammar correction
-tool = language_tool_python.LanguageTool('en-US')
+app = Flask(__name__)
+tool = language_tool_python.LanguageTool('en-US')  # English Grammar Checker
 
-def correct_grammar(text):
-    matches = tool.check(text)
-    corrected_text = language_tool_python.utils.correct(text, matches)
+@app.route('/correct', methods=['POST'])
+def correct_grammar():
+    data = request.get_json()
+    prompt = data.get("text", "")
 
-    # Collect suggestions
-    suggestions = [
-        match.replacements[0] if match.replacements else text
-        for match in matches
-    ]
+    # Grammar Correction
+    matches = tool.check(prompt)
+    corrected_text = language_tool_python.utils.correct(prompt, matches)
 
-    return {
-        "correctedText": corrected_text,
-        "suggestions": suggestions
-    }
+    # Suggestions
+    suggestions = [match.replacements[0] for match in matches if match.replacements]
+
+    return jsonify({"correctedText": corrected_text, "suggestions": suggestions})
 
 if __name__ == "__main__":
-    input_text = sys.stdin.read().strip()
-    result = correct_grammar(input_text)
-    print(json.dumps(result))  # Output in JSON format
+    # Automatically start the server in the background
+    subprocess.Popen([sys.executable, __file__], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    app.run(host="127.0.0.1", port=5000, debug=False)
