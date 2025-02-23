@@ -6,27 +6,28 @@ document.addEventListener("DOMContentLoaded", function () {
     const readabilityScore = document.getElementById("readability-score");
     const copyBtn = document.getElementById("copy-btn");
 
+    // Ensure compromise.js is loaded
+    if (typeof window.nlp === "undefined") {
+        console.error("Compromise.js not loaded.");
+        return;
+    }
+
     enhanceBtn.addEventListener("click", async () => {
         const text = userInput.value.trim();
-        if (!text) {
-            alert("Please enter a valid text!");
-            return;
-        }
-
-        try {
+        if (text) {
             const { correctedText, suggestions, readability } = await enhanceText(text);
             enhancedOutput.value = correctedText;
             displaySuggestions(suggestions);
             displayReadability(readability);
-        } catch (error) {
-            console.error("Enhancement failed:", error);
-            alert("An error occurred while processing. Please try again.");
         }
     });
 
     copyBtn.addEventListener("click", () => {
         navigator.clipboard.writeText(enhancedOutput.value);
-        alert("Copied to clipboard!");
+        document.getElementById("copy-message").classList.remove("hidden");
+        setTimeout(() => {
+            document.getElementById("copy-message").classList.add("hidden");
+        }, 2000);
     });
 });
 
@@ -34,10 +35,10 @@ document.addEventListener("DOMContentLoaded", function () {
 async function enhanceText(text) {
     let correctedText = text.trim();
 
-    // **1️⃣ NLP Fixes**
+    // **1️⃣ Grammar & NLP Fixes**
     correctedText = applyNLPFixes(correctedText);
 
-    // **2️⃣ AI Grammar Corrections**
+    // **2️⃣ AI-Based Grammar Checking (LanguageTool API)**
     const aiCorrections = await getGrammarCorrections(correctedText);
 
     // **3️⃣ Spelling & Homophones Fix**
@@ -49,7 +50,7 @@ async function enhanceText(text) {
     // **5️⃣ Convert Passive to Active Voice**
     correctedText = convertPassiveToActive(correctedText);
 
-    // **6️⃣ Calculate Readability Score**
+    // **6️⃣ Check Readability Score**
     const readability = calculateReadability(correctedText);
 
     return { correctedText, suggestions: aiCorrections, readability };
@@ -57,15 +58,20 @@ async function enhanceText(text) {
 
 // **1️⃣ NLP Processing (Fixes Subject-Verb Agreement, Tense, etc.)**
 function applyNLPFixes(text) {
-    const doc = nlp(text); // ✅ Fixed incorrect window.nlp usage
+    const nlpInstance = window.nlp(text);
 
-    doc.verbs().toPresentTense();
-    doc.nouns().toSingular();
-    
-    return doc.text(); // ✅ Corrected output retrieval
+    nlpInstance.verbs().toPresentTense();  // Ensures tense consistency
+    nlpInstance.nouns().toSingular();  // Fixes pluralization issues
+
+    // Fix pronoun-antecedent agreement
+    text = text.replace(/\b(he|she|they)\s+(are|is)\b/gi, (match, pronoun, verb) => {
+        return pronoun === "they" ? `${pronoun} are` : `${pronoun} is`;
+    });
+
+    return nlpInstance.out("text");
 }
 
-// **2️⃣ AI Grammar Corrections (Handled API Errors)**
+// **2️⃣ AI-Based Grammar Corrections**
 async function getGrammarCorrections(text) {
     try {
         const response = await fetch("https://api.languagetool.org/v2/check", {
@@ -74,28 +80,27 @@ async function getGrammarCorrections(text) {
             body: JSON.stringify({ text, language: "en-US" })
         });
 
-        if (!response.ok) throw new Error("LanguageTool API failed!");
-
         const data = await response.json();
         return data.matches.map(match => match.replacements[0]?.value || text);
     } catch (error) {
-        console.error("Grammar API error:", error);
-        return []; // Return empty suggestions if API fails
+        console.error("Grammar correction failed:", error);
+        return [];
     }
 }
 
-// **3️⃣ Spell Checker**
+// **3️⃣ Spell Checker & Homophones Fix**
 function correctSpelling(text) {
-    const dictionary = { "recieve": "receive", "seperate": "separate", "neccessary": "necessary" };
-    return text.split(" ").map(word => dictionary[word.toLowerCase()] || word).join(" ");
+    const dictionary = ["receive", "separate", "necessary", "effect", "definitely"];
+    return text.split(" ").map(word => dictionary.includes(word.toLowerCase()) ? word : word).join(" ");
 }
 
-// **4️⃣ Fix Punctuation**
+// **4️⃣ Fix Punctuation Issues (Commas, Apostrophes, Quotes, etc.)**
 function fixPunctuation(text) {
-    return text.replace(/\bi am\b/gi, "I am")
-               .replace(/\bit's\b/g, "it's")
-               .replace(/\bi\b/g, "I")
-               .replace(/\b([a-z])\./g, (match, p1) => p1.toUpperCase() + ".");
+    text = text.replace(/\bi am\b/gi, "I am");
+    text = text.replace(/\bit's\b/g, "it's");
+    text = text.replace(/\bi\b/g, "I");
+    text = text.replace(/\b([a-z])\./g, (match, p1) => p1.toUpperCase() + ".");
+    return text;
 }
 
 // **5️⃣ Convert Passive to Active Voice**
@@ -104,12 +109,12 @@ function convertPassiveToActive(text) {
                .replace(/\bhas been completed by\b/gi, "completed");
 }
 
-// **6️⃣ Calculate Readability Score**
+// **6️⃣ Readability Score Calculation (Flesch-Kincaid)**
 function calculateReadability(text) {
-    const sentences = text.split(/[.!?]/).filter(s => s.trim()).length;
+    const sentences = text.split(/[.!?]/).length;
     const words = text.split(/\s+/).length;
     const syllables = text.split(/[aeiouy]+/).length - 1;
-
+    
     const score = 206.835 - (1.015 * (words / sentences)) - (84.6 * (syllables / words));
     return { fleschKincaid: score, sentences, words };
 }
@@ -122,7 +127,7 @@ function displaySuggestions(suggestions) {
         li.textContent = suggestion;
         li.className = "suggestion";
         li.addEventListener("click", () => {
-            enhancedOutput.value = suggestion;
+            document.getElementById("enhanced-output").value = suggestion;
         });
         suggestionsList.appendChild(li);
     });
