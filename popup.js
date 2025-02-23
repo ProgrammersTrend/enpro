@@ -6,10 +6,10 @@ document.addEventListener("DOMContentLoaded", function () {
     const copyBtn = document.getElementById("copy-btn");
     const copyMessage = document.getElementById("copy-message");
 
-    enhanceBtn.addEventListener("click", () => {
+    enhanceBtn.addEventListener("click", async () => {
         const prompt = userInput.value.trim();
         if (prompt) {
-            const { correctedText, suggestions } = enhancePrompt(prompt);
+            const { correctedText, suggestions } = await enhancePrompt(prompt);
             enhancedOutput.value = correctedText;
             displaySuggestions(suggestions);
         }
@@ -29,27 +29,23 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 });
 
-function enhancePrompt(prompt) {
+async function enhancePrompt(prompt) {
     if (!prompt) return { correctedText: "", suggestions: [] };
 
-    let correctedText = prompt.charAt(0).toUpperCase() + prompt.slice(1);
-    correctedText = correctedText.replace(/\bi\b/g, 'I');
-    correctedText = correctedText.replace(/\bpls\b/gi, 'please');
-    correctedText = correctedText.replace(/\bthx\b|\bty\b/gi, 'thank you');
-    correctedText = correctedText.replace(/\bai\b/gi, 'Artificial Intelligence');
+    try {
+        const response = await fetch("http://localhost:5000/correct", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text: prompt })
+        });
 
-    if (!/[.!?]$/.test(correctedText)) {
-        correctedText += '.';
+        const data = await response.json();
+        return { correctedText: data.correctedText, suggestions: data.suggestions };
+
+    } catch (error) {
+        console.error("Error:", error);
+        return { correctedText: prompt, suggestions: [] };
     }
-
-    const suggestions = [
-        correctedText.replace("please", "kindly"),
-        correctedText.replace("thank you", "thanks"),
-        correctedText.replace("Artificial Intelligence", "AI"),
-        correctedText.replace("Enhance", "Improve"),
-    ];
-
-    return { correctedText, suggestions };
 }
 
 function displaySuggestions(suggestions) {
