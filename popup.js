@@ -2,30 +2,28 @@ document.addEventListener("DOMContentLoaded", function () {
     const userInput = document.getElementById("user-input");
     const enhanceBtn = document.getElementById("enhance-btn");
     const enhancedOutput = document.getElementById("enhanced-output");
+    const suggestionsList = document.getElementById("suggestions-list");
     const copyBtn = document.getElementById("copy-btn");
     const copyMessage = document.getElementById("copy-message");
 
-    let verbForms = {}; // Store verb mappings
+    let verbForms = {};
 
-    // Load verb forms from CSV
-    async function loadVerbForms() {
-        try {
-            const response = await fetch("verbforms.csv");
-            const data = await response.text();
-            const lines = data.split("\n");
+    // Load verb forms from CSV file
+    fetch("verbforms.csv")
+        .then(response => response.text())
+        .then(csvText => {
+            const lines = csvText.split("\n");
             lines.forEach(line => {
-                const [V1, V2, V3, V4, V5] = line.split(",").map(v => v.trim());
+                const [V1, V2, V3, V4, V5] = line.split(",");
                 if (V1) {
-                    verbForms[V1.toLowerCase()] = { V2, V3, V4, V5 };
+                    verbForms[V1.trim().toLowerCase()] = {
+                        V1: V1.trim(), V2: V2.trim(), V3: V3.trim(), V4: V4.trim(), V5: V5.trim()
+                    };
                 }
             });
-        } catch (error) {
-            console.error("Error loading verb forms:", error);
-        }
-    }
+        });
 
-    enhanceBtn.addEventListener("click", async () => {
-        await loadVerbForms(); // Ensure verbs are loaded before processing
+    enhanceBtn.addEventListener("click", () => {
         const prompt = userInput.value.trim();
         if (prompt) {
             const correctedText = enhancePrompt(prompt);
@@ -43,91 +41,49 @@ document.addEventListener("DOMContentLoaded", function () {
         clearTimeout(copyMessage.timeout);
         copyMessage.timeout = setTimeout(() => {
             copyMessage.classList.add("hidden");
-        }, 3000);
+        }, 5000);
     }
 
     function enhancePrompt(prompt) {
         if (!prompt) return "";
 
-        // Split into sentences based on punctuation
-        let sentences = prompt.split(/(?<=[.!?])\s+/);
+        let words = prompt.split(/\s+/);
+        let enhancedWords = [];
 
-        let correctedSentences = sentences.map(sentence => correctGrammar(sentence));
+        for (let i = 0; i < words.length; i++) {
+            let word = words[i].toLowerCase();
+            let nextWord = words[i + 1] ? words[i + 1].toLowerCase() : "";
 
-        return correctedSentences.join(" ");
-    }
+            // Detect time-related words to determine the correct tense
+            let tense = "present";
+            if (word === "yesterday" || word === "last" || nextWord === "ago") tense = "past";
+            if (word === "tomorrow" || word === "next" || nextWord === "will") tense = "future";
+            if (word === "already" || word === "since" || word === "for") tense = "perfect";
 
-    function correctGrammar(sentence) {
-        let words = sentence.split(/\s+/);
-        let correctedWords = [];
-
-        let previousWord = ""; // Track last word for context
-
-        words.forEach((word, index) => {
-            let cleanedWord = word.toLowerCase().replace(/[.,!?;]/g, ''); // Remove punctuation for lookup
-            let correctedWord = word;
-
-            // Detect tense based on timeline words
-            let isSimplePresent = previousWord.match(/\b(always|usually|every|often|sometimes|never|generally)\b/i);
-            let isPresentContinuous = previousWord.match(/\b(now|currently|at the moment|right now)\b/i);
-            let isPresentPerfect = previousWord.match(/\b(since|for|ever|never|so far|just|yet|already|recently|lately)\b/i);
-            let isPresentPerfectContinuous = previousWord.match(/\b(since|for)\b/i);
-
-            let isSimplePast = previousWord.match(/\b(yesterday|last|ago|before|previously)\b/i);
-            let isPastContinuous = previousWord.match(/\b(while|when)\b/i);
-            let isPastPerfect = previousWord.match(/\b(before|after)\b/i);
-            let isPastPerfectContinuous = previousWord.match(/\b(for|since)\b/i);
-
-            let isSimpleFuture = previousWord.match(/\b(tomorrow|soon|next|later|someday)\b/i);
-            let isFutureContinuous = previousWord.match(/\b(soon|by then)\b/i);
-            let isFuturePerfect = previousWord.match(/\b(by|before|by the time)\b/i);
-            let isFuturePerfectContinuous = previousWord.match(/\b(for|since|by then)\b/i);
-
-            // Fix verb tense while ensuring sentence structure remains
-            if (verbForms[cleanedWord]) {
-                if (isSimplePresent) {
-                    correctedWord = verbForms[cleanedWord].V2; // Present simple (3rd person singular)
-                } else if (isPresentContinuous) {
-                    correctedWord = "is " + verbForms[cleanedWord].V4; // Present continuous (-ing form)
-                } else if (isPresentPerfect) {
-                    correctedWord = "has " + verbForms[cleanedWord].V3; // Present perfect
-                } else if (isPresentPerfectContinuous) {
-                    correctedWord = "has been " + verbForms[cleanedWord].V4; // Present perfect continuous
-
-                } else if (isSimplePast) {
-                    correctedWord = verbForms[cleanedWord].V3; // Past simple
-                } else if (isPastContinuous) {
-                    correctedWord = "was " + verbForms[cleanedWord].V4; // Past continuous
-                } else if (isPastPerfect) {
-                    correctedWord = "had " + verbForms[cleanedWord].V3; // Past perfect
-                } else if (isPastPerfectContinuous) {
-                    correctedWord = "had been " + verbForms[cleanedWord].V4; // Past perfect continuous
-
-                } else if (isSimpleFuture) {
-                    correctedWord = "will " + verbForms[cleanedWord].V1; // Future simple
-                } else if (isFutureContinuous) {
-                    correctedWord = "will be " + verbForms[cleanedWord].V4; // Future continuous
-                } else if (isFuturePerfect) {
-                    correctedWord = "will have " + verbForms[cleanedWord].V3; // Future perfect
-                } else if (isFuturePerfectContinuous) {
-                    correctedWord = "will have been " + verbForms[cleanedWord].V4; // Future perfect continuous
+            // Check if the word is a verb and replace it accordingly
+            if (verbForms[word]) {
+                if (tense === "past") {
+                    enhancedWords.push(verbForms[word].V2);
+                } else if (tense === "future") {
+                    enhancedWords.push("will " + verbForms[word].V1);
+                } else if (tense === "perfect") {
+                    enhancedWords.push("has " + verbForms[word].V3);
                 } else {
-                    correctedWord = verbForms[cleanedWord].V1; // Default to base
+                    enhancedWords.push(verbForms[word].V1);
                 }
+            } else {
+                enhancedWords.push(words[i]);
             }
-
-            correctedWords.push(correctedWord);
-            previousWord = word;
-        });
-
-        // Ensure sentence structure remains intact
-        let correctedSentence = correctedWords.join(" ");
-
-        // Ensure punctuation is placed correctly
-        if (!/[.!?]$/.test(correctedSentence)) {
-            correctedSentence += "."; // Ensure it ends with a period
         }
 
-        return correctedSentence.charAt(0).toUpperCase() + correctedSentence.slice(1);
+        let correctedText = enhancedWords.join(" ");
+
+        // Ensure correct punctuation
+        correctedText = correctedText.replace(/\si\s/g, " I "); // Capitalize "I"
+        correctedText = correctedText.replace(/(\w+)([.,!?])/g, "$1 $2"); // Fix punctuation spacing
+        correctedText = correctedText.replace(/\s+/g, " ").trim(); // Remove extra spaces
+        if (!/[.!?]$/.test(correctedText)) correctedText += "."; // Add final punctuation
+
+        return correctedText;
     }
 });
