@@ -88,9 +88,10 @@ document.addEventListener("DOMContentLoaded", function () {
             previousWord = word;
         });
 
-        // Join words back with spaces and ensure proper punctuation
+        // Ensure sentence structure remains intact
         let correctedSentence = correctedWords.join(" ");
 
+        // Ensure punctuation is placed correctly
         if (!/[.!?]$/.test(correctedSentence)) {
             correctedSentence += "."; // Ensure it ends with a period
         }
