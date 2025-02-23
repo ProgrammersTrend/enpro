@@ -24,8 +24,11 @@
         <p id="copy-message" class="hidden">Text Copied!</p>
 
         <ul id="suggestions-list"></ul>
+        <p id="readability-score"></p> <!-- ✅ Added readability score display -->
     </div>
 
+    <!-- ✅ Include NLP library BEFORE popup.js -->
+    <script src="https://unpkg.com/compromise"></script>
     <script src="popup.js"></script>
 </body>
 </html>
