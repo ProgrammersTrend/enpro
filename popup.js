@@ -9,9 +9,19 @@ document.addEventListener("DOMContentLoaded", function () {
     enhanceBtn.addEventListener("click", async () => {
         const prompt = userInput.value.trim();
         if (prompt) {
-            const { correctedText, suggestions } = await enhancePrompt(prompt);
-            enhancedOutput.value = correctedText;
-            displaySuggestions(suggestions);
+            const response = await fetch("http://127.0.0.1:5000/correct", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ text: prompt }),
+            });
+
+            if (response.ok) {
+                const { correctedText, suggestions } = await response.json();
+                enhancedOutput.value = correctedText;
+                displaySuggestions(suggestions);
+            } else {
+                enhancedOutput.value = "Error processing text.";
+            }
         }
     });
 
@@ -28,25 +38,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }, 5000);
     }
 });
-
-async function enhancePrompt(prompt) {
-    if (!prompt) return { correctedText: "", suggestions: [] };
-
-    try {
-        const response = await fetch("http://localhost:5000/correct", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ text: prompt })
-        });
-
-        const data = await response.json();
-        return { correctedText: data.correctedText, suggestions: data.suggestions };
-
-    } catch (error) {
-        console.error("Error:", error);
-        return { correctedText: prompt, suggestions: [] };
-    }
-}
 
 function displaySuggestions(suggestions) {
     suggestionsList.innerHTML = "";
