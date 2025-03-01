@@ -3,7 +3,8 @@
   "name": "EnPro - AI Prompt Enhancer",
   "version": "1.0",
   "description": "Enhance AI prompts for better responses",
-  "permissions": ["clipboardWrite"],
+  "permissions": ["clipboardWrite", "storage"],
+  "host_permissions": ["http://127.0.0.1:5000/*"],
   "action": {
     "default_popup": "popup.html",
     "default_icon": "icon.png"
