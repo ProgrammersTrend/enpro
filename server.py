@@ -1,13 +1,10 @@
 from flask import Flask, request, jsonify
-from flask_cors import CORS
-from gramformer import Gramformer
-import torch
+import language_tool_python
 
 app = Flask(__name__)
-CORS(app)  # Allow requests from popup.js
 
-# Load Gramformer model
-gf = Gramformer(quality=1, device='cuda' if torch.cuda.is_available() else 'cpu')
+# Initialize LanguageTool for English
+tool = language_tool_python.LanguageTool('en-US')
 
 @app.route('/enhance', methods=['POST'])
 def enhance_prompt():
@@ -18,10 +15,9 @@ def enhance_prompt():
         return jsonify({"enhanced": ""})
 
     # Correct grammar and spelling
-    corrected_sentences = gf.correct(prompt, max_candidates=1)
-    enhanced_prompt = list(corrected_sentences)[0] if corrected_sentences else prompt
+    corrected_prompt = tool.correct(prompt)
 
-    return jsonify({"enhanced": enhanced_prompt})
+    return jsonify({"enhanced": corrected_prompt})
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000, debug=True)
