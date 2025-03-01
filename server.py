@@ -1,10 +1,10 @@
 from flask import Flask, request, jsonify
-import language_tool_python
+from gingerit.gingerit import GingerIt
 
 app = Flask(__name__)
 
-# Initialize LanguageTool for English
-tool = language_tool_python.LanguageTool('en-US')
+# Initialize GingerIt
+ginger = GingerIt()
 
 @app.route('/enhance', methods=['POST'])
 def enhance_prompt():
@@ -15,7 +15,7 @@ def enhance_prompt():
         return jsonify({"enhanced": ""})
 
     # Correct grammar and spelling
-    corrected_prompt = tool.correct(prompt)
+    corrected_prompt = ginger.parse(prompt)["result"]
 
     return jsonify({"enhanced": corrected_prompt})
 
